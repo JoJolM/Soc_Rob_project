@@ -3,6 +3,9 @@ TAMER (Training an Agent Manually via Evaluative Reinforcement) is a framework f
 
 This is an implementation of a TAMER agent, converted from a standard Q-learning agent using the steps provided by Knox [here](http://www.cs.utexas.edu/users/bradknox/kcap09/Knox_and_Stone,_K-CAP_2009.html).
 
+## TAMER_v2
+
+A project made in collaboration with Carjin and myself to change the learning method from a binary evaluative method to a demonstrative method where we would make the human pick the actions for one or more episodes and then use those as the training set.
 
 
 ## How to run
