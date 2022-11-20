@@ -8,6 +8,9 @@ from pathlib import Path
 from sys import stdout
 from csv import DictWriter
 
+import matplotlib.pyplot as plt
+
+
 import numpy as np
 from sklearn import pipeline, preprocessing
 from sklearn.kernel_approximation import RBFSampler
@@ -130,8 +133,13 @@ class Tamer:
         print(f'Episode: {episode_index + 1}  Timestep:', end='')
         rng = np.random.default_rng()
         tot_reward = 0
+        max_spd = 0
+        times = []
+        speeds = [] 
+        position = []
         state = self.env.reset()
         ep_start_time = dt.datetime.now().time()
+        ep_start_timer = time.time()
         with open(self.reward_log_path, 'a+', newline='') as write_obj:
             dict_writer = DictWriter(write_obj, fieldnames=self.reward_log_columns)
             dict_writer.writeheader()
@@ -176,14 +184,36 @@ class Tamer:
                             )
                             self.H.update(state, action, human_reward)
                             break
-
+                max_spd = state[1] if max_spd<state[1] else max_spd
+                times.append(time.time() - ep_start_timer)
+                speeds.append(state[1])
+                position.append(state[0])
                 tot_reward += reward
                 if done:
                     print(f'  Reward: {tot_reward}')
                     break
 
+
                 stdout.write('\b' * (len(str(ts)) + 1))
                 state = next_state
+
+
+            ep_finish_time = time.time() - ep_start_timer
+            print("time taken for episode to finish (seconds): ", ep_finish_time)
+            print("episode max speed : ", max_spd)
+            print("State ? : ", state)
+            print("\n")
+            #print("state representation given by featurize_state : ",self.H.feat)
+
+            fig, ax1 = plt.subplots()
+            ax2 = ax1.twinx()
+            ax1.plot(times, speeds, "b")
+            ax2.plot(times, position, "g")
+
+            ax1.set_xlabel("Time")
+            ax1.set_ylabel("Speed", color = "b")
+            ax2.set_ylabel("Position",color = "g") 
+            plt.show()
 
         # Decay epsilon
         if self.epsilon > self.min_eps:
