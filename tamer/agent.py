@@ -84,7 +84,9 @@ class Tamer:
         tame=True,  # set to false for normal Q-learning
         ts_len=0.2,  # length of timestep for training TAMER
         output_dir=LOGS_DIR,
-        model_file_to_load=None  # filename of pretrained model
+        model_file_to_load=None , # filename of pretrained model
+
+        demo = False # set to True to make a demonstration run
     ):
         self.tame = tame
         self.ts_len = ts_len
@@ -125,6 +127,8 @@ class Tamer:
         """ Epsilon-greedy Policy """
         if np.random.random() < 1 - self.epsilon:
             preds = self.H.predict(state) if self.tame else self.Q.predict(state)
+            print("\npreds : ",preds)
+            print("action taken : ",np.argmax(preds))
             return np.argmax(preds)
         else:
             return np.random.randint(0, self.env.action_space.n)
@@ -148,7 +152,12 @@ class Tamer:
                 self.env.render()
 
                 # Determine next action
-                action = self.act(state)
+                if not self.demo:
+                    action = self.act(state)
+
+                elif self.demo:
+                    action = 
+
                 if self.tame:
                     disp.show_action(action)
 
@@ -189,6 +198,7 @@ class Tamer:
                 speeds.append(state[1])
                 position.append(state[0])
                 tot_reward += reward
+
                 if done:
                     print(f'  Reward: {tot_reward}')
                     break
@@ -232,6 +242,11 @@ class Tamer:
             # only init pygame display if we're actually training tamer
             from .interface import Interface
             disp = Interface(action_map=MOUNTAINCAR_ACTION_MAP)
+
+        if self.demo:
+            # only init pygame display if we're actually training tamer
+            from .interface_2 import Interface
+            disp = Interface(action_map=MOUNTAINCAR_ACTION_MAP,state)            
 
         for i in range(self.num_episodes):
             self._train_episode(i, disp)
