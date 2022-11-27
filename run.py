@@ -18,7 +18,7 @@ async def main():
     min_eps = 0
     num_episodes = 5
     tame = False  # set to false for vanilla Q learning
-    demo = True # set to True for demo run
+    demo = False # set to True for demo run
 
     # set a timestep for training TAMER
     # the more time per step, the easier for the human
