@@ -83,23 +83,24 @@ class Tamer:
         min_eps=0,  # minimum value for epsilon after annealing
         tame=True,  # set to false for normal Q-learning
         ts_len=0.2,  # length of timestep for training TAMER
+        demo = False, # set to True to make a demonstration run
         output_dir=LOGS_DIR,
-        model_file_to_load=None , # filename of pretrained model
+        model_file_to_load=None  # filename of pretrained model
 
-        demo = False # set to True to make a demonstration run
     ):
         self.tame = tame
         self.ts_len = ts_len
         self.env = env
         self.uuid = uuid.uuid4()
         self.output_dir = output_dir
+        self.demo =demo
 
         # init model
         if model_file_to_load is not None:
             print(f'Loaded pretrained model: {model_file_to_load}')
             self.load_model(filename=model_file_to_load)
         else:
-            if tame:
+            if tame or demo:
                 self.H = SGDFunctionApproximator(env)  # init H function
             else:  # optionally run as standard Q Learning
                 self.Q = SGDFunctionApproximator(env)  # init Q function
@@ -126,9 +127,9 @@ class Tamer:
     def act(self, state):
         """ Epsilon-greedy Policy """
         if np.random.random() < 1 - self.epsilon:
-            preds = self.H.predict(state) if self.tame else self.Q.predict(state)
-            print("\npreds : ",preds)
-            print("action taken : ",np.argmax(preds))
+            preds = self.H.predict(state) if (self.tame or self.demo) else self.Q.predict(state)
+            # print("\npreds : ",preds)
+            # print("action taken : ",np.argmax(preds))
             return np.argmax(preds)
         else:
             return np.random.randint(0, self.env.action_space.n)
@@ -138,6 +139,7 @@ class Tamer:
         rng = np.random.default_rng()
         tot_reward = 0
         max_spd = 0
+        last_action = 0
         times = []
         speeds = [] 
         position = []
@@ -156,7 +158,8 @@ class Tamer:
                     action = self.act(state)
 
                 elif self.demo:
-                    action = 
+                    action = disp.show_choice(last_action,state)
+                    last_action = action
 
                 if self.tame:
                     disp.show_action(action)
@@ -164,7 +167,7 @@ class Tamer:
                 # Get next state and reward
                 next_state, reward, done, info = self.env.step(action)
 
-                if not self.tame:
+                if not (self.tame or self.demo):
                     if done and next_state[0] >= 0.5:
                         td_target = reward
                     else:
@@ -214,13 +217,13 @@ class Tamer:
             print("State ? : ", state)
             print("\n")
             #print("state representation given by featurize_state : ",self.H.feat)
-
+            steps = list(range(0,len(speeds)))
             fig, ax1 = plt.subplots()
             ax2 = ax1.twinx()
-            ax1.plot(times, speeds, "b")
-            ax2.plot(times, position, "g")
+            ax1.plot(steps, speeds, "b")
+            ax2.plot(steps, position, "g")
 
-            ax1.set_xlabel("Time")
+            ax1.set_xlabel("Steps")
             ax1.set_ylabel("Speed", color = "b")
             ax2.set_ylabel("Position",color = "g") 
             plt.show()
@@ -246,7 +249,7 @@ class Tamer:
         if self.demo:
             # only init pygame display if we're actually training tamer
             from .interface_2 import Interface
-            disp = Interface(action_map=MOUNTAINCAR_ACTION_MAP,state)            
+            disp = Interface(action_map=MOUNTAINCAR_ACTION_MAP)            
 
         for i in range(self.num_episodes):
             self._train_episode(i, disp)
@@ -299,7 +302,7 @@ class Tamer:
         Args:
             filename: name of pickled file
         """
-        model = self.H if self.tame else self.Q
+        model = self.H if self.tame or self.demo else self.Q
         filename = filename + '.p' if not filename.endswith('.p') else filename
         with open(MODELS_DIR.joinpath(filename), 'wb') as f:
             pickle.dump(model, f)

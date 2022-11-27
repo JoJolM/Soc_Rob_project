@@ -1,20 +1,24 @@
 import os
 import pygame
 
+white = (255, 255, 255)
+red = (255,0,0)
+green = (0,255,0)
 
 class Interface:
     """ Pygame interface for training TAMER """
 
-    def __init__(self, action_map, state=0):
+    def __init__(self, action_map):
         self.action_map = action_map
         pygame.init()
         self.font = pygame.font.Font("freesansbold.ttf", 32)
+        self.font2 = pygame.font.Font("freesansbold.ttf", 14)
 
         # set position of pygame window (so it doesn't overlap with gym)
         os.environ["SDL_VIDEO_WINDOW_POS"] = "1000,100"
         os.environ["SDL_VIDEO_CENTERED"] = "0"
 
-        self.screen = pygame.display.set_mode((200, 100))
+        self.screen = pygame.display.set_mode((400, 100))
         area = self.screen.fill((0, 0, 0))
         pygame.display.update(area)
 
@@ -38,14 +42,15 @@ class Interface:
         pygame.display.update(area)
         return reward
 
-    def show_choice(self, state = 0):
+    action = 0
+    def show_choice(self, last_action, state = 0):
         """
         Show agent's action on pygame screen
         Args:
             action: numerical action (for MountainCar environment only currently)
         """
+        action = last_action
         choice = True
-        action = 0
         while choice : 
             area = None
             for event in pygame.event.get():
@@ -61,28 +66,45 @@ class Interface:
                         area = self.screen.fill((0, 255, 0))
                         choice = False
                         pygame.display.update(area)
-                        pygame.time.wait(1000)
+                        #pygame.time.wait(1000)
 
             pygame.display.update(area)
 
             area = self.screen.fill((0, 0, 0))
-            pygame.display.update(area)
-            text = self.font.render(self.action_map[action], True, (255, 255, 255))
+            # pygame.display.update(area)
+            text = self.font.render(self.action_map[action], True, white)
             text_rect = text.get_rect()
             text_rect.center = (100, 50)
             area = self.screen.blit(text, text_rect)
-            pygame.display.update(area)
+
+
+            if state[1] < 0:
+                dire = "going left"
+                color = red
+
+            elif state[1] > 0:
+                dire = "going right"
+                color = green
+
+            elif state[1] == 0:
+                dire = "No speed"
+                color = white
+
+            spd = str(state[1])
+
+            text_2 = self.font2.render(dire, True, color)
+            text_2_rect = text.get_rect()
+            text_2_rect.center = (300, 25)
+            area = self.screen.blit(text_2,text_2_rect)
+
+            text_3 = self.font2.render(spd, True, color)
+            text_3_rect = text.get_rect()
+            text_3_rect.center = (300, 75)
+            area = self.screen.blit(text_3,text_3_rect)
+
+            pygame.display.flip()
 
             # if choice == False:
             #     pygame.
 
-        return self.action_map[action]
-
-
-### test 
-MOUNTAINCAR_ACTION_MAP = {0: 'left', 1: 'none', 2: 'right'}
-disp = Interface(MOUNTAINCAR_ACTION_MAP)
-act = disp.show_choice()
-
-print(act)
-
+        return action

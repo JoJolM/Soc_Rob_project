@@ -17,7 +17,8 @@ async def main():
     epsilon = 0  # vanilla Q learning actually works well with no random exploration
     min_eps = 0
     num_episodes = 5
-    tame = True  # set to false for vanilla Q learning
+    tame = False  # set to false for vanilla Q learning
+    demo = True # set to True for demo run
 
     # set a timestep for training TAMER
     # the more time per step, the easier for the human
@@ -26,7 +27,7 @@ async def main():
     tamer_training_timestep = 0.3
 
     agent = Tamer(env, num_episodes, discount_factor, epsilon, min_eps, tame,
-                  tamer_training_timestep, model_file_to_load=None)
+                  tamer_training_timestep, demo,model_file_to_load=None)
 
     await agent.train(model_file_to_save='autosave')
     agent.play(n_episodes=1, render=True)
